@@ -4,6 +4,7 @@ import Shuffle from './Shuffle';
 import BubbleMenu from './BubbleMenu';
 import CustomNotification from './CustomNotification';
 import InfinityBanner from './InfinityBanner';
+import PfpGenerator from './PfpGenerator';
 import './App.css';
 
 function App() {
@@ -136,6 +137,8 @@ function App() {
             </div>
           </div>
         </div>
+
+        <PfpGenerator />
       </div>
     </>
   );
