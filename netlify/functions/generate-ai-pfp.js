@@ -61,16 +61,39 @@ export async function handler(event, context) {
       })
     });
 
+    // Get response text first for better error handling
+    const visionResponseText = await visionResponse.text();
+    console.log('Vision API Response Status:', visionResponse.status);
+    console.log('Vision API Response:', visionResponseText.substring(0, 500));
+
     if (!visionResponse.ok) {
-      const errorData = await visionResponse.json();
-      throw new Error(errorData.error?.message || `Vision API Error: ${visionResponse.statusText}`);
+      let errorMessage = `Vision API Error (${visionResponse.status}): ${visionResponse.statusText}`;
+      try {
+        const errorData = JSON.parse(visionResponseText);
+        errorMessage = errorData.error?.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${errorMessage} - Response: ${visionResponseText}`;
+      }
+      throw new Error(errorMessage);
     }
 
-    const visionData = await visionResponse.json();
+    let visionData;
+    try {
+      visionData = JSON.parse(visionResponseText);
+    } catch (e) {
+      throw new Error(`Failed to parse Vision API response: ${visionResponseText.substring(0, 200)}`);
+    }
+
+    if (!visionData.choices || !visionData.choices[0] || !visionData.choices[0].message) {
+      throw new Error(`Invalid Vision API response structure: ${JSON.stringify(visionData)}`);
+    }
+
     const imageDescription = visionData.choices[0].message.content;
 
     // Step 2: Generate flamified version using DALL-E 3
     const dallePrompt = `${imageDescription}. ${prompt}`;
+
+    console.log('DALL-E Prompt:', dallePrompt);
 
     const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -87,12 +110,28 @@ export async function handler(event, context) {
       })
     });
 
+    // Get response text first for better error handling
+    const dalleResponseText = await dalleResponse.text();
+    console.log('DALL-E API Response Status:', dalleResponse.status);
+    console.log('DALL-E API Response:', dalleResponseText.substring(0, 500));
+
     if (!dalleResponse.ok) {
-      const errorData = await dalleResponse.json();
-      throw new Error(errorData.error?.message || `DALL-E API Error: ${dalleResponse.statusText}`);
+      let errorMessage = `DALL-E API Error (${dalleResponse.status}): ${dalleResponse.statusText}`;
+      try {
+        const errorData = JSON.parse(dalleResponseText);
+        errorMessage = errorData.error?.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${errorMessage} - Response: ${dalleResponseText}`;
+      }
+      throw new Error(errorMessage);
     }
 
-    const dalleData = await dalleResponse.json();
+    let dalleData;
+    try {
+      dalleData = JSON.parse(dalleResponseText);
+    } catch (e) {
+      throw new Error(`Failed to parse DALL-E response: ${dalleResponseText.substring(0, 200)}`);
+    }
     
     // Fetch the generated image and convert to base64 (bypass CORS)
     if (dalleData.data && dalleData.data[0] && dalleData.data[0].url) {
