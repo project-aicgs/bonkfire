@@ -144,22 +144,59 @@ function PfpGenerator() {
     setAiLoading(true);
     
     try {
-      // Convert uploaded image to base64
+      // Create a properly formatted PNG for OpenAI (must be square with alpha channel)
       const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
+      const size = 1024; // Use 1024x1024 for better quality
+      canvas.width = size;
+      canvas.height = size;
       const ctx = canvas.getContext('2d');
       
-      // Draw and resize image to 512x512 for API
-      const scale = Math.min(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
-      const x = (canvas.width - uploadedImage.width * scale) / 2;
-      const y = (canvas.height - uploadedImage.height * scale) / 2;
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear canvas (creates alpha channel)
+      ctx.clearRect(0, 0, size, size);
+      
+      // Draw image centered and scaled to fit
+      const scale = Math.min(size / uploadedImage.width, size / uploadedImage.height);
+      const x = (size - uploadedImage.width * scale) / 2;
+      const y = (size - uploadedImage.height * scale) / 2;
+      
+      // Draw the image
       ctx.drawImage(uploadedImage, x, y, uploadedImage.width * scale, uploadedImage.height * scale);
       
-      // Convert canvas to base64
-      const base64Image = canvas.toDataURL('image/png');
+      // Convert to blob with quality adjustment to stay under 4MB
+      let quality = 0.95;
+      let blob = null;
+      
+      // Try progressively lower quality until under 4MB
+      do {
+        blob = await new Promise(resolve => {
+          canvas.toBlob(resolve, 'image/png', quality);
+        });
+        
+        if (blob.size > 4 * 1024 * 1024) {
+          // If still too large, reduce canvas size
+          if (quality <= 0.5) {
+            const smallCanvas = document.createElement('canvas');
+            smallCanvas.width = 512;
+            smallCanvas.height = 512;
+            const smallCtx = smallCanvas.getContext('2d');
+            smallCtx.clearRect(0, 0, 512, 512);
+            smallCtx.drawImage(canvas, 0, 0, 512, 512);
+            
+            blob = await new Promise(resolve => {
+              smallCanvas.toBlob(resolve, 'image/png', 0.9);
+            });
+            break;
+          }
+          quality -= 0.1;
+        }
+      } while (blob.size > 4 * 1024 * 1024 && quality > 0.3);
+      
+      // Convert blob to base64
+      const base64Image = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
 
       // Call our Netlify Function (keeps API key secure!)
       const response = await fetch('/.netlify/functions/generate-ai-pfp', {
