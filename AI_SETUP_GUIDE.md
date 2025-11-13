@@ -2,7 +2,12 @@
 
 ## How It Works 🔥
 
-The AI PFP Generator uses **Netlify Functions** (serverless) to securely call the OpenAI API. Your API key stays safe on the server and is never exposed to users!
+The AI PFP Generator uses **Netlify Functions** (serverless) with a two-step AI process:
+
+1. **GPT-4 Vision** analyzes the uploaded image and describes it
+2. **DALL-E 3** generates a new flamified version based on that description + your prompt
+
+Your API key stays safe on the server and is never exposed to users!
 
 ## Setup Instructions
 
@@ -90,7 +95,10 @@ git push origin main
 ## Costs
 
 - **Netlify Functions:** Free for first 125k requests/month
-- **OpenAI API:** ~$0.02 per image generation
+- **OpenAI API per flamification:**
+  - GPT-4o Vision: ~$0.005-0.01 per image analysis
+  - DALL-E 3: ~$0.04 per 1024x1024 generation
+  - **Total: ~$0.05 per flamification**
   - You'll need to add credits to your OpenAI account
   - Monitor usage in your OpenAI dashboard
 

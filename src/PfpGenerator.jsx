@@ -221,11 +221,40 @@ function PfpGenerator() {
       if (data.imageUrl) {
         const img = new Image();
         img.onload = () => {
+          // Clear stickers first
+          setStickers([]);
+          setActiveSticker(null);
+          
+          // Update the image - this will trigger canvas redraw via useEffect
           setAiGeneratedImage(img);
           setUploadedImage(img);
-          setStickers([]); // Clear any stickers when AI transforms the image
+          
+          // Force canvas redraw after a short delay to ensure image is loaded
+          setTimeout(() => {
+            if (canvasRef.current) {
+              const canvas = canvasRef.current;
+              const ctx = canvas.getContext('2d');
+              
+              // Clear canvas
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              
+              // Redraw the new image
+              const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+              const x = (canvas.width - img.width * scale) / 2;
+              const y = (canvas.height - img.height * scale) / 2;
+              ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            }
+          }, 100);
+          
+          // Show success message
+          alert('🔥 Your PFP has been flamified! Click Copy to save it.');
+        };
+        img.onerror = () => {
+          throw new Error('Failed to load generated image');
         };
         img.src = data.imageUrl; // This is now a base64 data URL
+      } else {
+        throw new Error('No image URL returned from server');
       }
     } catch (error) {
       console.error('AI Generation Error:', error);
