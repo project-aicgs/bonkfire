@@ -217,14 +217,15 @@ function PfpGenerator() {
 
       const data = await response.json();
       
-      if (data.data && data.data[0] && data.data[0].url) {
+      // The Netlify function returns base64 image to bypass CORS
+      if (data.imageUrl) {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.onload = () => {
           setAiGeneratedImage(img);
           setUploadedImage(img);
+          setStickers([]); // Clear any stickers when AI transforms the image
         };
-        img.src = data.data[0].url;
+        img.src = data.imageUrl; // This is now a base64 data URL
       }
     } catch (error) {
       console.error('AI Generation Error:', error);

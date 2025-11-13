@@ -61,7 +61,30 @@ export async function handler(event, context) {
       throw new Error(errorData.error?.message || `OpenAI API Error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+      const data = await response.json();
+      
+      // Fetch the generated image from OpenAI (to bypass CORS)
+      if (data.data && data.data[0] && data.data[0].url) {
+        const imageUrl = data.data[0].url;
+        
+        // Download the image from OpenAI
+        const imageResponse = await fetch(imageUrl);
+        const imageBuffer = await imageResponse.buffer();
+        
+        // Convert to base64
+        const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+        
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify({
+            imageUrl: base64Image // Return base64 instead of URL
+          })
+        };
+      }
 
     return {
       statusCode: 200,
