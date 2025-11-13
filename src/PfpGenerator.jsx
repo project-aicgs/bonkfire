@@ -7,11 +7,25 @@ function PfpGenerator() {
   const [activeSticker, setActiveSticker] = useState(null);
   const [draggingSticker, setDraggingSticker] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [mode, setMode] = useState('stickers'); // 'stickers' or 'ai'
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
   // Generate sticker paths from 33.png to 64.png
   const stickerImages = Array.from({ length: 32 }, (_, i) => `/${i + 33}.png`);
+
+  // Predetermined AI prompts
+  const presetPrompts = [
+    "Make this a pixel art style bonk fire warrior",
+    "Transform this into a cyberpunk style with neon orange flames",
+    "Add epic fire effects and glowing eyes",
+    "Make this look like a retro 8-bit video game character",
+    "Turn this into a legendary fire mage with magical flames",
+    "Create a cosmic space theme with fire nebulas"
+  ];
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -126,6 +140,68 @@ function PfpGenerator() {
       });
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const generateAIImage = async (prompt) => {
+    if (!uploadedImage || !prompt.trim()) {
+      alert('Please enter a prompt!');
+      return;
+    }
+
+    setAiLoading(true);
+    
+    try {
+      // Convert uploaded image to base64
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw and resize image to 512x512 for API
+      const scale = Math.min(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+      const x = (canvas.width - uploadedImage.width * scale) / 2;
+      const y = (canvas.height - uploadedImage.height * scale) / 2;
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(uploadedImage, x, y, uploadedImage.width * scale, uploadedImage.height * scale);
+      
+      // Convert canvas to base64
+      const base64Image = canvas.toDataURL('image/png');
+
+      // Call our Netlify Function (keeps API key secure!)
+      const response = await fetch('/.netlify/functions/generate-ai-pfp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Image,
+          prompt: prompt
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.data && data.data[0] && data.data[0].url) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          setAiGeneratedImage(img);
+          setUploadedImage(img);
+        };
+        img.src = data.data[0].url;
+      }
+    } catch (error) {
+      console.error('AI Generation Error:', error);
+      alert(`❌ Failed to generate AI image: ${error.message}\n\nMake sure the OpenAI API key is configured in Netlify.`);
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -255,19 +331,85 @@ function PfpGenerator() {
               </div>
             </div>
 
-            <div className="sticker-menu">
-              <h3 className="sticker-menu-title">Stickers</h3>
-              <div className="sticker-grid">
-                {stickerImages.map((src, index) => (
-                  <div
-                    key={index}
-                    className="sticker-item"
-                    onClick={() => addSticker(src)}
-                  >
-                    <img src={src} alt={`Sticker ${index + 33}`} />
-                  </div>
-                ))}
+            <div className="editor-menu">
+              <div className="mode-switcher">
+                <button 
+                  className={`mode-button ${mode === 'stickers' ? 'active' : ''}`}
+                  onClick={() => setMode('stickers')}
+                >
+                  Stickers
+                </button>
+                <button 
+                  className={`mode-button ${mode === 'ai' ? 'active' : ''}`}
+                  onClick={() => setMode('ai')}
+                >
+                  AI Transform
+                </button>
               </div>
+
+              {mode === 'stickers' ? (
+                <div className="sticker-menu">
+                  <h3 className="sticker-menu-title">Stickers</h3>
+                  <div className="sticker-grid">
+                    {stickerImages.map((src, index) => (
+                      <div
+                        key={index}
+                        className="sticker-item"
+                        onClick={() => addSticker(src)}
+                      >
+                        <img src={src} alt={`Sticker ${index + 33}`} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="ai-menu">
+                  <h3 className="ai-menu-title">AI Transform</h3>
+                  
+                  <div className="preset-prompts">
+                    <p className="preset-label">Preset Styles:</p>
+                    {presetPrompts.map((prompt, index) => (
+                      <button
+                        key={index}
+                        className="preset-button"
+                        onClick={() => {
+                          setAiPrompt(prompt);
+                          generateAIImage(prompt);
+                        }}
+                        disabled={aiLoading}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="custom-prompt">
+                    <p className="preset-label">Custom Prompt:</p>
+                    <textarea
+                      className="prompt-input"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="Enter your custom AI prompt..."
+                      rows={4}
+                      disabled={aiLoading}
+                    />
+                    <button
+                      className="pfp-button generate-button"
+                      onClick={() => generateAIImage(aiPrompt)}
+                      disabled={aiLoading || !aiPrompt.trim()}
+                    >
+                      {aiLoading ? 'Generating...' : 'Generate'}
+                    </button>
+                  </div>
+
+                  {aiLoading && (
+                    <div className="ai-loading">
+                      <div className="loading-spinner"></div>
+                      <p>Creating your AI masterpiece...</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
