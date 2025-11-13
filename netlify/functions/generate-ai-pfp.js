@@ -1,3 +1,6 @@
+import fetch from 'node-fetch';
+import FormData from 'form-data';
+
 export async function handler(event, context) {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
@@ -29,12 +32,11 @@ export async function handler(event, context) {
       };
     }
 
-    // Convert base64 image to blob
+    // Convert base64 image to buffer
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
     // Create form data for OpenAI API
-    const FormData = require('form-data');
     const formData = new FormData();
     formData.append('image', imageBuffer, {
       filename: 'image.png',

@@ -13,7 +13,8 @@
     "react-dom": "^18.2.0",
     "gsap": "^3.12.5",
     "@gsap/react": "^2.1.1",
-    "form-data": "^4.0.0"
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
