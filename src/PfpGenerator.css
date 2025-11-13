@@ -320,85 +320,58 @@
   margin-bottom: 0.5rem;
 }
 
-.preset-prompts {
+.flamify-container {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  text-align: center;
 }
 
-.preset-label {
+.flamify-description {
   font-family: 'Press Start 2P', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #fff;
-  margin-bottom: 0.5rem;
+  line-height: 2;
+  max-width: 400px;
 }
 
-.preset-button {
-  padding: 0.75rem 1rem;
-  font-size: 0.7rem;
-  font-family: 'Press Start 2P', sans-serif;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #fff;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: left;
-  line-height: 1.6;
+.flamify-button {
+  padding: 1.5rem 3rem !important;
+  font-size: 1.2rem !important;
+  font-weight: bold;
+  background: linear-gradient(135deg, rgba(255, 120, 0, 0.9), rgba(255, 50, 0, 0.9)) !important;
+  box-shadow: 0 0 30px rgba(255, 120, 0, 0.8),
+              0 0 50px rgba(255, 80, 0, 0.6),
+              0 0 70px rgba(255, 50, 0, 0.4) !important;
+  animation: flamePulse 2s ease-in-out infinite;
 }
 
-.preset-button:hover:not(:disabled) {
-  background: rgba(255, 120, 0, 0.7);
-  transform: translateX(5px);
-  box-shadow: 0 0 15px rgba(255, 120, 0, 0.6);
+.flamify-button:hover:not(:disabled) {
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 40px rgba(255, 120, 0, 1),
+              0 0 60px rgba(255, 80, 0, 0.8),
+              0 0 90px rgba(255, 50, 0, 0.6) !important;
 }
 
-.preset-button:disabled {
-  opacity: 0.5;
+.flamify-button:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
+  animation: none;
 }
 
-.custom-prompt {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.prompt-input {
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 0.75rem;
-  font-family: 'Press Start 2P', sans-serif;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #fff;
-  border-radius: 10px;
-  resize: vertical;
-  line-height: 1.6;
-}
-
-.prompt-input:focus {
-  outline: none;
-  box-shadow: 0 0 15px rgba(255, 120, 0, 0.6);
-  border-color: rgba(255, 120, 0, 0.8);
-}
-
-.prompt-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.prompt-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.generate-button {
-  align-self: flex-start;
-}
-
-.generate-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+@keyframes flamePulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255, 120, 0, 0.8),
+                0 0 50px rgba(255, 80, 0, 0.6),
+                0 0 70px rgba(255, 50, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 120, 0, 1),
+                0 0 60px rgba(255, 80, 0, 0.8),
+                0 0 80px rgba(255, 50, 0, 0.6);
+  }
 }
 
 .ai-loading {

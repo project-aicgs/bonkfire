@@ -8,7 +8,6 @@ function PfpGenerator() {
   const [draggingSticker, setDraggingSticker] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [mode, setMode] = useState('stickers'); // 'stickers' or 'ai'
-  const [aiPrompt, setAiPrompt] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
   const canvasRef = useRef(null);
@@ -17,15 +16,8 @@ function PfpGenerator() {
   // Generate sticker paths from 33.png to 64.png
   const stickerImages = Array.from({ length: 32 }, (_, i) => `/${i + 33}.png`);
 
-  // Predetermined AI prompts
-  const presetPrompts = [
-    "Make this a pixel art style bonk fire warrior",
-    "Transform this into a cyberpunk style with neon orange flames",
-    "Add epic fire effects and glowing eyes",
-    "Make this look like a retro 8-bit video game character",
-    "Turn this into a legendary fire mage with magical flames",
-    "Create a cosmic space theme with fire nebulas"
-  ];
+  // The ONE predetermined flamification prompt
+  const flamifyPrompt = "Make this profile picture cartoon flamified, make cartoonified fire be the central theme of this profile picture and make it cartoonified fire effects. Cartoon art style for a flame theme is very important to maintain the integrity of the theme. Just edit the existing picture, do not completely go off the rails and ignore the existing picture. Make sure your changes / \"flamification\" is done on this picture.";
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -343,7 +335,7 @@ function PfpGenerator() {
                   className={`mode-button ${mode === 'ai' ? 'active' : ''}`}
                   onClick={() => setMode('ai')}
                 >
-                  AI Transform
+                  AI Flamify
                 </button>
               </div>
 
@@ -364,50 +356,28 @@ function PfpGenerator() {
                 </div>
               ) : (
                 <div className="ai-menu">
-                  <h3 className="ai-menu-title">AI Transform</h3>
+                  <h3 className="ai-menu-title">Flamify Your PFP</h3>
                   
-                  <div className="preset-prompts">
-                    <p className="preset-label">Preset Styles:</p>
-                    {presetPrompts.map((prompt, index) => (
-                      <button
-                        key={index}
-                        className="preset-button"
-                        onClick={() => {
-                          setAiPrompt(prompt);
-                          generateAIImage(prompt);
-                        }}
-                        disabled={aiLoading}
-                      >
-                        {prompt}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="custom-prompt">
-                    <p className="preset-label">Custom Prompt:</p>
-                    <textarea
-                      className="prompt-input"
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      placeholder="Enter your custom AI prompt..."
-                      rows={4}
-                      disabled={aiLoading}
-                    />
+                  <div className="flamify-container">
+                    <p className="flamify-description">
+                      Transform your profile picture with cartoon fire effects and flame-themed artistry!
+                    </p>
+                    
                     <button
-                      className="pfp-button generate-button"
-                      onClick={() => generateAIImage(aiPrompt)}
-                      disabled={aiLoading || !aiPrompt.trim()}
+                      className="pfp-button flamify-button"
+                      onClick={() => generateAIImage(flamifyPrompt)}
+                      disabled={aiLoading}
                     >
-                      {aiLoading ? 'Generating...' : 'Generate'}
+                      {aiLoading ? '🔥 Flamifying...' : '🔥 Flamify my PFP!'}
                     </button>
-                  </div>
 
-                  {aiLoading && (
-                    <div className="ai-loading">
-                      <div className="loading-spinner"></div>
-                      <p>Creating your AI masterpiece...</p>
-                    </div>
-                  )}
+                    {aiLoading && (
+                      <div className="ai-loading">
+                        <div className="loading-spinner"></div>
+                        <p>Adding epic fire effects...</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
